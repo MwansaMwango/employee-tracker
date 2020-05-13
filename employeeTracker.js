@@ -80,13 +80,15 @@ async function getAction () {
         break;
     
       case "View all employees by Department":
-        const selectedDept = await inquirer.prompt({
+        const answer = await inquirer.prompt({
           name: "department",
           type: "rawlist",
           message: "What department would you like to view?",
           choices: deptList
-        }).department
-        viewEmployeesByDept( await selectedDept);
+        })
+        const selectedDept = answer.department
+        console.log(selectedDept);
+        viewEmployeesByDept(selectedDept);
 
       break;
     }
@@ -119,27 +121,27 @@ function viewEmployees() {
   });
 }
 
-function viewEmployeesByDept(selectedDept) {
-   console.log('Variable for selected department'+ selectedDept);
-  // connection.query(`SELECT 
-  //   e.id,
-  //   e.first_name,
-  //   e.last_name,
-  //   role.title,
-  //   department.name as department,
-  //   role.salary,
-  //   concat (m.first_name,' ', m.last_name) manager
-  // FROM employee e
-  // INNER JOIN employee m
-  //   ON m.id = e.manager_id
-  // INNER JOIN role
-  //   ON e.role_id = role.id 
-  // INNER JOIN department
-  //   ON role.department_id = department.id
-  //   WHERE department.name = '${selectedDept}'` , function(err, res) {
-  //   console.table(res);
-    // getAction();
-  // });
+function viewEmployeesByDept(dept) {
+   console.log('Variable for selected department = '+ dept);
+  connection.query(`SELECT 
+    e.id,
+    e.first_name,
+    e.last_name,
+    role.title,
+    department.name as department,
+    role.salary,
+    concat (m.first_name,' ', m.last_name) manager
+  FROM employee e
+  LEFT JOIN employee m
+    ON m.id = e.manager_id
+  INNER JOIN role
+    ON e.role_id = role.id 
+  INNER JOIN department
+    ON role.department_id = department.id
+    WHERE department.name = '${dept}'` , function(err, res) {
+    console.table(res);
+    getAction();
+  });
 }
 
 getAction();
