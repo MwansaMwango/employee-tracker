@@ -49,9 +49,6 @@ connection.connect(function(err) {
       managerList = res.map(row => row.manager);
     })
     
-let allDepts = '';
-
-
 const queryAllData = 
       `SELECT 
         e.id,
@@ -78,8 +75,12 @@ function promptAction() {
         "View all employees",
           "View all employees by Department",
           "View all employees by Manager",
-        "View department total salary",
+        "View Roles",
+        "View Departments",
+        "View Department total salary budget",
         "Add Employee",
+        "Add Role",
+        "Add Department",
         "Remove Employee",
         "Update Employee",
           "Update Employee Role",
@@ -122,7 +123,21 @@ async function getAction () {
         const selectedMgrId = selectedMgrObj.manager_id;
         viewEmployeesByMgr(selectedMgrId);
         break;
-        
+      case "View Department total salary budget":
+        const promptDeptBudget = await inquirer.prompt({
+          name: "departmentBudget",
+          type: "rawlist",
+          message: "What department's budget would you like to view?",
+          choices: deptList
+        })
+        const selectedDeptBudget = promptDeptBudget.departmentBudget
+        viewBudgetByDept(selectedDeptBudget);
+        break;
+    
+    
+    
+    
+    //--- switch ---
     }
 
   } catch (err) {
@@ -201,6 +216,22 @@ function viewEmployeesByMgr(mgrId) {
   });
 }
 
+function viewBudgetByDept(dept) {
+  console.log('Selected department = '+ dept);
+  connection.query(
+  `SELECT SUM(salary) AS 'Total Budget'
+  FROM employee e
+  LEFT JOIN employee m
+  ON m.id = e.manager_id
+  INNER JOIN role
+  ON e.role_id = role.id 
+  INNER JOIN department
+  ON role.department_id = department.id
+  WHERE department.name = '${dept}'` , function(err, res) {
+  console.table(res);
+  getAction();
+  });
+}
 getAction();
 
 
