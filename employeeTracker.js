@@ -26,10 +26,19 @@ connection.connect(function(err) {
     const queryAllDepts = `SELECT name FROM department`;
     let deptList = [];
     connection.query(queryAllDepts, function(err, res) {
-          deptList = res.map(row => row.name);
-
+      deptList = res.map(row => row.name);
+      
     })
+    //Get list of roles
+    let roleList = [];
+    let roleObjArr = [];
+    const queryAllRoles = `SELECT * FROM role`;
+    connection.query(queryAllRoles, function(err, res) {
+      roleObjArr = res;
 
+      roleList = res.map(row => row.title);
+    })    
+    
     //Get list of managers
     const queryAllMgrs = 
     `SELECT 
@@ -44,6 +53,7 @@ connection.connect(function(err) {
     ON role.department_id = department.id`;
     let managerList = [];
     let managerObjArr = [];
+
     connection.query(queryAllMgrs, function(err, res) {
       managerObjArr = res;
       managerList = res.map(row => row.manager);
@@ -99,6 +109,14 @@ async function getAction () {
       case "View all employees":
         viewEmployees();
         break;
+      
+      case "View Roles":
+        viewRoles();
+        break;
+      
+      case "View Departments":
+        viewDepts();
+        break;
     
       case "View all employees by Department":
         const promptDept = await inquirer.prompt({
@@ -118,11 +136,12 @@ async function getAction () {
           message: "Under which manager are the employees?",
           choices: managerList
         })
-        const selectedMgr = promptMgr.manager
-        const selectedMgrObj = await managerObjArr.find(row => row.manager === selectedMgr)
-        const selectedMgrId = selectedMgrObj.manager_id;
+        let selectedMgr = promptMgr.manager
+        let selectedMgrObj = await managerObjArr.find(row => row.manager === selectedMgr)
+        let selectedMgrId = selectedMgrObj.manager_id;
         viewEmployeesByMgr(selectedMgrId);
         break;
+
       case "View Department total salary budget":
         const promptDeptBudget = await inquirer.prompt({
           name: "departmentBudget",
@@ -134,10 +153,49 @@ async function getAction () {
         viewBudgetByDept(selectedDeptBudget);
         break;
     
+      case "Add Employee":
+      
+      const promptEmployeeData = await inquirer.prompt([
+          {
+          name: "firstName",
+          type: "input",
+          message: "What is your first name?",
+          },
+          {
+            name: "lastName",
+            type: "input",
+            message: "What is your last name?",
+            },
+            {
+              name: "role",
+              type: "rawlist",
+              message: "What is your role?",
+              choices: roleList
+            },
+            {
+              name: "manager",
+              type: "rawlist",
+              message: "Select your manager?",
+              choices: managerList
+            }
+          ]);
+
+          let employeeData = {};
+          employeeData.first_name = promptEmployeeData.firstName;
+          employeeData.last_name = promptEmployeeData.lastName;
+          let selectedEmpMgr = promptEmployeeData.manager;
+          let selectedEmpMgrObj = await managerObjArr.find(row => row.manager === selectedEmpMgr)
+          let selectedEmpMgrId = selectedEmpMgrObj.manager_id;
+          employeeData.manager_id = selectedEmpMgrId;
+         
+          let selectedRole = promptEmployeeData.role
+          let selectedRoleObj = await roleObjArr.find(row => row.title === selectedRole)
+          let selectedRoleId = selectedRoleObj.id;
+          employeeData.role_id = selectedRoleId;
+          addEmployeeData(employeeData);
+          break;
     
-    
-    
-    //--- switch ---
+      //--- switch ---
     }
 
   } catch (err) {
@@ -168,6 +226,21 @@ function viewEmployees() {
   });
 }
 
+function viewRoles() {
+  connection.query(
+    `SELECT * FROM role`, function(err, res) {
+    console.table(res);
+    getAction();
+  });
+}
+
+function viewDepts() {
+  connection.query(
+    `SELECT * FROM department`, function(err, res) {
+    console.table(res);
+    getAction();
+  });
+}
 function viewEmployeesByDept(dept) {
   console.log('Selected department = '+ dept);
   connection.query(`SELECT 
@@ -229,6 +302,15 @@ function viewBudgetByDept(dept) {
   ON role.department_id = department.id
   WHERE department.name = '${dept}'` , function(err, res) {
   console.table(res);
+  getAction();
+  });
+}
+function addEmployeeData(emplDetails) {
+  console.log('Employee data = ', emplDetails);
+  connection.query(
+  `INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?,?,?,?)`,[emplDetails.first_name,emplDetails.last_name,emplDetails.manager_id, emplDetails.role_id ], function(err, res) {
+    if (err) throw err;
+    console.table(res);
   getAction();
   });
 }
