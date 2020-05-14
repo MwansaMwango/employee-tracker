@@ -63,10 +63,13 @@ connection.connect(function(err) {
 
     // Get list of Employees
     let employeeObjArr = [];
+    let employeeList = [];
+    
     const queryAllEmployees = `SELECT * FROM employee`;
     connection.query(queryAllEmployees, function(err, res) {
       console.log(res);
       employeeObjArr = res;
+      employeeList = res.map(row => row.first_name + ' ' + row.last_name);
     }) 
     
 const queryAllData = 
@@ -271,6 +274,61 @@ async function getAction () {
               let selectedEmpId = selectedEmpObj.id;
             removeEmployee(selectedEmpId);
             break;
+
+            case "Update Employee":
+              const promptUpdateEmployee = await inquirer.prompt([
+                {
+                name: "selectedEmployee",
+                type: "rawlist",
+                message: "Select Employee to update?",
+                choices: employeeList
+                }
+                ]);
+      
+                let selectedEmpFullName = promptUpdateEmployee.selectedEmployee;
+                let selectedEmployeeObj = await employeeObjArr.find(row => row.first_name + ' ' + row.last_name === selectedEmpFullName)
+                let selectedEmployeeId = selectedEmployeeObj.id;
+
+                const promptUpdateEmployeeData = await inquirer.prompt([
+                  {
+                    name: "firstName",
+                    type: "input",
+                    message: "Enter updated first name?",
+                    },
+                    {
+                      name: "lastName",
+                      type: "input",
+                      message: "Enter updated last name?",
+                      },
+                      {
+                        name: "role",
+                        type: "rawlist",
+                        message: "Enter updated role?",
+                        choices: roleList
+                      },
+                      {
+                        name: "manager",
+                        type: "rawlist",
+                        message: "Enter updated manager?",
+                        choices: managerList
+                      }
+                    ]);
+          
+                    let updatedEmployeeData = {};
+                    updatedEmployeeData.first_name = promptUpdateEmployeeData.firstName;
+                    updatedEmployeeData.last_name = promptUpdateEmployeeData.lastName;
+                    let updatedEmpMgr = promptUpdateEmployeeData.manager;
+                    let updatedEmpMgrObj = await managerObjArr.find(row => row.manager === updatedEmpMgr)
+                    let updatedEmpMgrId = updatedEmpMgrObj.manager_id;
+                    updatedEmployeeData.manager_id = updatedEmpMgrId;
+                
+                    let updatedRole = promptUpdateEmployeeData.role
+                    let updatedRoleObj = await roleObjArr.find(row => row.title === updatedRole)
+                    let updatedRoleId = updatedRoleObj.id;
+                    updatedEmployeeData.role_id = updatedRoleId;
+
+                    updateEmployeeData(selectedEmployeeId, updatedEmployeeData);
+                    break;
               
       //--- switch ---
     }
@@ -420,7 +478,17 @@ function removeEmployee(employeeId) {
   getAction();
   });
 }
-
+function updateEmployeeData(emplId, emplDetails) {
+  console.log('Update Employee id = ',emplId, 'Update Employee data = ', emplDetails);
+  connection.query(
+  `UPDATE employee SET first_name = ?, last_name = ?, manager_id =?, role_id = ? WHERE id = ?`,
+  [emplDetails.first_name,emplDetails.last_name,emplDetails.manager_id, emplDetails.role_id, emplId ],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
 getAction();
 
 
