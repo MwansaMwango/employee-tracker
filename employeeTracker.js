@@ -60,6 +60,14 @@ connection.connect(function(err) {
       managerObjArr = res;
       managerList = res.map(row => row.manager);
     })
+
+    // Get list of Employees
+    let employeeObjArr = [];
+    const queryAllEmployees = `SELECT * FROM employee`;
+    connection.query(queryAllEmployees, function(err, res) {
+      console.log(res);
+      employeeObjArr = res;
+    }) 
     
 const queryAllData = 
       `SELECT 
@@ -239,6 +247,31 @@ async function getAction () {
               addDept(deptData);
               break;
 
+          case "Remove Employee":
+             const promptRemoveEmployee = await inquirer.prompt([
+              {
+                name: "firstName",
+                type: "input",
+                message: "Enter first name of employee to remove?"
+              },
+              {
+                name: "lastName",
+                type: "input",
+                message: "Enter last name of employee to remove?"
+              }
+            ]);
+
+            let employeeFirstName = promptRemoveEmployee.firstName;
+            let employeeLastName = promptRemoveEmployee.lastName;
+            console.log("Employee Obj Array = ", employeeObjArr);
+            let selectedEmpObj = await employeeObjArr.find(
+              row => row.first_name === employeeFirstName && row.last_name === employeeLastName
+            );
+              console.log("Selected Empl Obj from await function = ",selectedEmpObj);
+              let selectedEmpId = selectedEmpObj.id;
+            removeEmployee(selectedEmpId);
+            break;
+              
       //--- switch ---
     }
 
@@ -259,7 +292,7 @@ function viewEmployees() {
       role.salary,
       concat (m.first_name,' ', m.last_name) manager
     FROM employee e
-    INNER JOIN employee m
+    LEFT JOIN employee m
       ON m.id = e.manager_id
     INNER JOIN role
       ON e.role_id = role.id 
@@ -269,7 +302,6 @@ function viewEmployees() {
     getAction();
   });
 }
-
 function viewRoles() {
   connection.query(
     `SELECT * FROM role`, function(err, res) {
@@ -277,7 +309,6 @@ function viewRoles() {
     getAction();
   });
 }
-
 function viewDepts() {
   connection.query(
     `SELECT * FROM department`, function(err, res) {
@@ -308,7 +339,6 @@ function viewEmployeesByDept(dept) {
   getAction();
   });
 }
-
 function viewEmployeesByMgr(mgrId) { 
   console.log('Selected manager = '+ mgrId);
   connection.query(`SELECT 
@@ -332,7 +362,6 @@ function viewEmployeesByMgr(mgrId) {
   getAction();
   });
 }
-
 function viewBudgetByDept(dept) {
   console.log('Selected department = '+ dept);
   connection.query(
@@ -360,7 +389,6 @@ function addEmployeeData(emplDetails) {
   getAction();
   });
 }
-
 function addRole(roleDetails) {
   console.log('Role data = ', roleDetails);
   connection.query(
@@ -372,7 +400,6 @@ function addRole(roleDetails) {
   getAction();
   });
 }
-
 function addDept(deptDetails) {
   console.log('Dept data = ', deptDetails);
   connection.query(
@@ -383,6 +410,17 @@ function addDept(deptDetails) {
   getAction();
   });
 }
+function removeEmployee(employeeId) {
+  console.log('Employee ID = ', employeeId);
+  connection.query(
+  `DELETE FROM employee WHERE employee.id = (?)`, [employeeId],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
 getAction();
 
 
