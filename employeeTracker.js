@@ -224,7 +224,21 @@ async function getAction () {
             roleData.department_id = selectedRoleDept.id;
             addRole(roleData);
             break;
-    
+
+          case "Add Department":
+              const promptDeptData = await inquirer.prompt([
+                {
+                  name: "name",
+                  type: "input",
+                  message: "What is the name of the new department?"
+                }
+              ]);
+  
+              let deptData = {};
+              deptData.name = promptDeptData.name;
+              addDept(deptData);
+              break;
+
       //--- switch ---
     }
 
@@ -352,6 +366,17 @@ function addRole(roleDetails) {
   connection.query(
   `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`,
   [roleDetails.title,roleDetails.salary, roleDetails.department_id],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
+function addDept(deptDetails) {
+  console.log('Dept data = ', deptDetails);
+  connection.query(
+  `INSERT INTO department (name) VALUES (?)`, [deptDetails.name],
   function(err, res) {
     if (err) throw err;
     console.table(res);
