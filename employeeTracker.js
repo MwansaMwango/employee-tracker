@@ -23,9 +23,11 @@ connection.connect(function(err) {
 
 });
     //Get list of departments
-    const queryAllDepts = `SELECT name FROM department`;
+    const queryAllDepts = `SELECT * FROM department`;
     let deptList = [];
+    let deptObjArr = [];
     connection.query(queryAllDepts, function(err, res) {
+      deptObjArr = res;
       deptList = res.map(row => row.name);
       
     })
@@ -194,6 +196,34 @@ async function getAction () {
           employeeData.role_id = selectedRoleId;
           addEmployeeData(employeeData);
           break;
+
+          case "Add Role":
+            const promptRoleData = await inquirer.prompt([
+              {
+                name: "title",
+                type: "input",
+                message: "What is the title of the new role?",
+              },
+              {
+                name: "salary",
+                type: "input",
+                message: "What is the expected salary for the new role?",
+              },
+              {
+                  name: "dept",
+                  type: "rawlist",
+                  message: "What department does the new role fall under?",
+                  choices: deptList
+              }
+            ]);
+
+            let roleData = {};
+            roleData.title = promptRoleData.title;
+            roleData.salary = promptRoleData.salary;
+            selectedRoleDept = await deptObjArr.find(row => row.name === promptRoleData.dept)
+            roleData.department_id = selectedRoleDept.id;
+            addRole(roleData);
+            break;
     
       //--- switch ---
     }
@@ -308,7 +338,21 @@ function viewBudgetByDept(dept) {
 function addEmployeeData(emplDetails) {
   console.log('Employee data = ', emplDetails);
   connection.query(
-  `INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?,?,?,?)`,[emplDetails.first_name,emplDetails.last_name,emplDetails.manager_id, emplDetails.role_id ], function(err, res) {
+  `INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?,?,?,?)`,
+  [emplDetails.first_name,emplDetails.last_name,emplDetails.manager_id, emplDetails.role_id ],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
+function addRole(roleDetails) {
+  console.log('Role data = ', roleDetails);
+  connection.query(
+  `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`,
+  [roleDetails.title,roleDetails.salary, roleDetails.department_id],
+  function(err, res) {
     if (err) throw err;
     console.table(res);
   getAction();
