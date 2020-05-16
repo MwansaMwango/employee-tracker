@@ -43,7 +43,7 @@ connection.connect(function(err) {
     
     //Get list of managers
     const queryAllMgrs = 
-    `SELECT 
+    `SELECT DISTINCT
     e.manager_id,
     concat (m.first_name,' ', m.last_name) manager
   FROM employee e
