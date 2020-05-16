@@ -67,7 +67,6 @@ connection.connect(function(err) {
     
     const queryAllEmployees = `SELECT * FROM employee`;
     connection.query(queryAllEmployees, function(err, res) {
-      console.log(res);
       employeeObjArr = res;
       employeeList = res.map(row => row.first_name + ' ' + row.last_name);
     }) 
@@ -105,9 +104,7 @@ function promptAction() {
         "Add Role",
         "Add Department",
         "Remove Employee",
-        "Update Employee",
-          "Update Employee Role",
-          "Update Employee Manager"
+        "Update Employee details",
       ]}
   )
 }
@@ -115,6 +112,7 @@ function promptAction() {
 async function getAction () {
   try {
 
+    displayBanner();  
     const promptActionAnswer = await promptAction();
  
     switch (promptActionAnswer.action) {
@@ -275,7 +273,7 @@ async function getAction () {
             removeEmployee(selectedEmpId);
             break;
 
-            case "Update Employee":
+            case "Update Employee details":
               const promptUpdateEmployee = await inquirer.prompt([
                 {
                 name: "selectedEmployee",
@@ -329,7 +327,8 @@ async function getAction () {
 
                     updateEmployeeData(selectedEmployeeId, updatedEmployeeData);
                     break;
-              
+
+            
       //--- switch ---
     }
 
@@ -489,7 +488,28 @@ function updateEmployeeData(emplId, emplDetails) {
   getAction();
   });
 }
+function displayBanner() {
+  const banner = `
+
+  ▓█████  ███▄ ▄███▓ ██▓███   ██▓     ▒█████ ▓██   ██▓▓█████ ▓█████    ▄▄▄█████▓ ██▀███   ▄▄▄       ▄████▄   ██ ▄█▀▓█████  ██▀███  
+  ▓█   ▀ ▓██▒▀█▀ ██▒▓██░  ██▒▓██▒    ▒██▒  ██▒▒██  ██▒▓█   ▀ ▓█   ▀    ▓  ██▒ ▓▒▓██ ▒ ██▒▒████▄    ▒██▀ ▀█   ██▄█▒ ▓█   ▀ ▓██ ▒ ██▒
+  ▒███   ▓██    ▓██░▓██░ ██▓▒▒██░    ▒██░  ██▒ ▒██ ██░▒███   ▒███      ▒ ▓██░ ▒░▓██ ░▄█ ▒▒██  ▀█▄  ▒▓█    ▄ ▓███▄░ ▒███   ▓██ ░▄█ ▒
+  ▒▓█  ▄ ▒██    ▒██ ▒██▄█▓▒ ▒▒██░    ▒██   ██░ ░ ▐██▓░▒▓█  ▄ ▒▓█  ▄    ░ ▓██▓ ░ ▒██▀▀█▄  ░██▄▄▄▄██ ▒▓▓▄ ▄██▒▓██ █▄ ▒▓█  ▄ ▒██▀▀█▄  
+  ░▒████▒▒██▒   ░██▒▒██▒ ░  ░░██████▒░ ████▓▒░ ░ ██▒▓░░▒████▒░▒████▒     ▒██▒ ░ ░██▓ ▒██▒ ▓█   ▓██▒▒ ▓███▀ ░▒██▒ █▄░▒████▒░██▓ ▒██▒
+  ░░ ▒░ ░░ ▒░   ░  ░▒▓▒░ ░  ░░ ▒░▓  ░░ ▒░▒░▒░   ██▒▒▒ ░░ ▒░ ░░░ ▒░ ░     ▒ ░░   ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ░▒ ▒  ░▒ ▒▒ ▓▒░░ ▒░ ░░ ▒▓ ░▒▓░
+   ░ ░  ░░  ░      ░░▒ ░     ░ ░ ▒  ░  ░ ▒ ▒░ ▓██ ░▒░  ░ ░  ░ ░ ░  ░       ░      ░▒ ░ ▒░  ▒   ▒▒ ░  ░  ▒   ░ ░▒ ▒░ ░ ░  ░  ░▒ ░ ▒░
+     ░   ░      ░   ░░         ░ ░   ░ ░ ░ ▒  ▒ ▒ ░░     ░      ░        ░        ░░   ░   ░   ▒   ░        ░ ░░ ░    ░     ░░   ░ 
+     ░  ░       ░                ░  ░    ░ ░  ░ ░        ░  ░   ░  ░               ░           ░  ░░ ░      ░  ░      ░  ░   ░     
+                                              ░ ░                                                  ░                               
+  
+`
+  // end of banner ASCII
+  console.log(banner);
+}
+
 getAction();
+
+
 
 
 
