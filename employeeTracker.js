@@ -11,7 +11,7 @@ const connection = mysql.createConnection({
   user: "root",
 
   // Your password
-  password: "sql0044",
+  password: "", // replace with your own password
   database: "employee_trackerdb"
 });
 
@@ -21,90 +21,88 @@ connection.connect(function(err) {
   console.log("Connected to database!");
 
 });
-    //Get list of departments
-    const queryAllDepts = `SELECT DISTINCT * FROM department`;
-    let deptList = [];
-    let deptObjArr = [];
-    connection.query(queryAllDepts, function(err, res) {
-      deptObjArr = res;
-      deptList = res.map(row => row.name);
-      
-    })
-    //Get list of roles
-    let roleList = [];
-    let roleObjArr = [];
-    const queryAllRoles = `SELECT DISTINCT * FROM role`;
-    connection.query(queryAllRoles, function(err, res) {
-      roleObjArr = res;
+//Get list of departments
+const queryAllDepts = `SELECT DISTINCT * FROM department`;
+let deptList = [];
+let deptObjArr = [];
+connection.query(queryAllDepts, function(err, res) {
+  deptObjArr = res;
+  deptList = res.map(row => row.name);
+})
+//Get list of roles
+let roleList = [];
+let roleObjArr = [];
+const queryAllRoles = `SELECT DISTINCT * FROM role`;
+connection.query(queryAllRoles, function(err, res) {
+  roleObjArr = res;
+  roleList = res.map(row => row.title);
+})    
 
-      roleList = res.map(row => row.title);
-    })    
-    
-    //Get list of managers
-    const queryAllMgrs = 
-    `SELECT DISTINCT
-    e.manager_id,
-    concat (m.first_name,' ', m.last_name) manager
-  FROM employee e
-  INNER JOIN employee m
-    ON m.id = e.manager_id
-  INNER JOIN role
-    ON e.role_id = role.id 
-  INNER JOIN department
-    ON role.department_id = department.id`;
-    let managerList = [];
-    let managerObjArr = [];
+//Get list of managers
+const queryAllMgrs = 
+`SELECT DISTINCT
+  e.manager_id,
+  concat (m.first_name,' ', m.last_name) manager
+FROM employee e
+INNER JOIN employee m
+ON m.id = e.manager_id
+INNER JOIN role
+ON e.role_id = role.id 
+INNER JOIN department
+ON role.department_id = department.id`;
+let managerList = [];
+let managerObjArr = [];
 
-    connection.query(queryAllMgrs, function(err, res) {
-      managerObjArr = res;
-      managerList = res.map(row => row.manager);
-    })
+connection.query(queryAllMgrs, function(err, res) {
+  managerObjArr = res;
+  managerList = res.map(row => row.manager);
+})
 
-    // Get list of Employees
-    let employeeObjArr = [];
-    let employeeList = [];
-    
-    const queryAllEmployees = `SELECT * FROM employee`;
-    connection.query(queryAllEmployees, function(err, res) {
-      employeeObjArr = res;
-      employeeList = res.map(row => row.first_name + ' ' + row.last_name);
-    }) 
-  
-    // Main Menu Actions
+// Get list of Employees
+let employeeObjArr = [];
+let employeeList = [];
+
+const queryAllEmployees = `SELECT * FROM employee`;
+connection.query(queryAllEmployees, function(err, res) {
+  employeeObjArr = res;
+  employeeList = res.map(row => row.first_name + ' ' + row.last_name);
+}) 
+
+// Main Menu Actions
 function promptAction() {
   return inquirer.prompt({
-      name: "action",
-      type: "rawlist",
-      message: "What would you like to do?",
-      choices: [
-        // Views (Read)
-        "View all employees",
-        "View all employees by Department",
-        "View all employees by Manager",
-        "View Roles",
-        "View Departments",
-        "View Department total salary budget",
-        // Add (Create)
-        "Add Employee",
-        "Add Role",
-        "Add Department",
-        // Remove (Delete)
-        "Remove Employee",
-        "Remove Role",
-        "Remove Department",
-        // Update 
-        "Update Employee details",
-        "Update Department",
-        "Update Role"
-      ]}
+    name: "action",
+    type: "rawlist",
+    message: "What would you like to do?",
+    choices: [
+      // Views (Read)
+      "View all employees",
+      "View all employees by Department",
+      "View all employees by Manager",
+      "View Roles",
+      "View Departments",
+      "View Department total salary budget",
+      // Add (Create)
+      "Add Employee",
+      "Add Role",
+      "Add Department",
+      // Remove (Delete)
+      "Remove Employee",
+      "Remove Role",
+      "Remove Department",
+      // Update 
+      "Update Employee details",
+      "Update Department",
+      "Update Role"
+    ]}
   )
 }
 
-
+ // Execute Selected Action
 async function getAction () {
   try {
 
-    displayBanner();  
+    // Prompt Action from User
     const promptActionAnswer = await promptAction();
  
     switch (promptActionAnswer.action) {
@@ -443,7 +441,7 @@ async function getAction () {
                     removeDept(selectedDeptRemoveId);
                     break;
             
-      //--- switch ---
+      //--- End of switch ---
     }
 
   } catch (err) {
@@ -489,7 +487,8 @@ function viewDepts() {
 }
 function viewEmployeesByDept(dept) {
   console.log('Selected department = '+ dept);
-  connection.query(`SELECT 
+  connection.query(
+  `SELECT 
     e.id,
     e.first_name,
     e.last_name,
@@ -512,7 +511,8 @@ function viewEmployeesByDept(dept) {
 }
 function viewEmployeesByMgr(mgrId) { 
   console.log('Selected manager = '+ mgrId);
-  connection.query(`SELECT 
+  connection.query(
+  `SELECT 
     e.id,
     e.first_name,
     e.last_name,
@@ -668,6 +668,8 @@ function displayBanner() {
   console.log(banner);
 }
 
+// Start Application - Display Terminal Banner
+displayBanner();
 getAction();
 
 
