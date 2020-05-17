@@ -11,13 +11,16 @@ const connection = mysql.createConnection({
   user: "root",
 
   // Your password
-  password: "", // replace with your own password
+  password: "sql0044", // replace with your own password
   database: "employee_trackerdb"
 });
 
 // Connect to MySQL datbase
 connection.connect(function(err) {
-  if (err) throw err;
+  if (err) {
+    console.log('Failed to connenct ot Database, check credentials');
+    throw err;
+  } 
   console.log("Connected to database!");
 
 });
@@ -93,7 +96,9 @@ function promptAction() {
       // Update 
       "Update Employee details",
       "Update Department",
-      "Update Role"
+      "Update Role",
+      // Exit
+      "Exit"
     ]}
   )
 }
@@ -185,23 +190,55 @@ async function getAction () {
           name: "firstName",
           type: "input",
           message: "What is your first name?",
+          validate: function (input) {
+            if (input === '') {
+                console.log("Please enter valid name!");
+                return false;
+             } else {
+                 return true;
+             }
+         }
           },
           {
             name: "lastName",
             type: "input",
             message: "What is your last name?",
+            validate: function (input) {
+              if (input === '') {
+                  console.log("Please enter valid name!");
+                  return false;
+               } else {
+                   return true;
+               }
+           }
             },
             {
               name: "role",
               type: "rawlist",
               message: "What is your role?",
-              choices: roleList
+              choices: roleList,
+              validate: function (input) {
+                if (input === '') {
+                    console.log("Please enter valid input from the list!");
+                    return false;
+                 } else {
+                     return true;
+                 }
+             }
             },
             {
               name: "manager",
               type: "rawlist",
               message: "Select your manager?",
-              choices: managerList
+              choices: managerList,
+              validate: function (input) {
+                if (input === '') {
+                    console.log("Please enter valid input from the list!");
+                    return false;
+                 } else {
+                     return true;
+                 }
+             }
             }
           ]);
 
@@ -226,11 +263,27 @@ async function getAction () {
                 name: "title",
                 type: "input",
                 message: "What is the title of the new role?",
+                validate: function (input) {
+                  if (input === '') {
+                      console.log("Please enter valid role or position!");
+                      return false;
+                   } else {
+                       return true;
+                   }
+               }
               },
               {
                 name: "salary",
                 type: "input",
                 message: "What is the expected salary for the new role?",
+                validate: function (input) {
+                  if (input === '' || input < 0) {
+                      console.log("Please enter valid salary!");
+                      return false;
+                   } else {
+                       return true;
+                   }
+               }
               },
               {
                   name: "dept",
@@ -358,7 +411,15 @@ async function getAction () {
                         name: "selectedDept", 
                         type: "rawlist",
                         message: "Select Department name to update?",
-                        choices: deptList
+                        choices: deptList,
+                        validate: function (input) {
+                          if (input === '') {
+                              console.log("Please enter valid input from the list!");
+                              return false;
+                           } else {
+                               return true;
+                           }
+                       }
                         }
                         ]);
               
@@ -371,6 +432,14 @@ async function getAction () {
                             name: "updateDeptName",
                             type: "input",
                             message: "Enter updated department name?",
+                            validate: function (input) {
+                              if (input === '') {
+                                  console.log("Please enter valid input, department cannot be blank!");
+                                  return false;
+                               } else {
+                                   return true;
+                               }
+                           }
                             },
                           ]);
                   
@@ -398,6 +467,14 @@ async function getAction () {
                             name: "updateRoleName",
                             type: "input",
                             message: "Enter updated Role name?",
+                            validate: function (input) {
+                              if (input === '') {
+                                  console.log("Please enter valid input. Cannot be blank!");
+                                  return false;
+                               } else {
+                                   return true;
+                               }
+                           }
                             },
                           ]);
                   
@@ -413,7 +490,15 @@ async function getAction () {
                         name: "selectedRole", 
                         type: "rawlist",
                         message: "Select Role name to delete?",
-                        choices: roleList
+                        choices: roleList,
+                        validate: function (input) {
+                          if (input === '') {
+                              console.log("Please enter valid input from the list!");
+                              return false;
+                           } else {
+                               return true;
+                           }
+                       }
                         }
                         ]);
               
@@ -430,7 +515,15 @@ async function getAction () {
                         name: "selectedDept", 
                         type: "rawlist",
                         message: "Select department name to delete?",
-                        choices: deptList
+                        choices: deptList,
+                        validate: function (input) {
+                          if (input === '') {
+                              console.log("Please enter valid input from the list!");
+                              return false;
+                           } else {
+                               return true;
+                           }
+                       }
                         }
                         ]);
               
@@ -439,6 +532,11 @@ async function getAction () {
                         let selectedDeptRemoveId = selectedDeptRemoveObj.id;
 
                     removeDept(selectedDeptRemoveId);
+                    break;
+
+                    case "Exit":
+                      console.log ("Thank you for using the Employment Tracker. See you next time!")
+                      connection.end  
                     break;
             
       //--- End of switch ---
