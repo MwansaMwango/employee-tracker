@@ -1,6 +1,5 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const cTable = require('console.table');
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -23,7 +22,7 @@ connection.connect(function(err) {
 
 });
     //Get list of departments
-    const queryAllDepts = `SELECT * FROM department`;
+    const queryAllDepts = `SELECT DISTINCT * FROM department`;
     let deptList = [];
     let deptObjArr = [];
     connection.query(queryAllDepts, function(err, res) {
@@ -34,7 +33,7 @@ connection.connect(function(err) {
     //Get list of roles
     let roleList = [];
     let roleObjArr = [];
-    const queryAllRoles = `SELECT * FROM role`;
+    const queryAllRoles = `SELECT DISTINCT * FROM role`;
     connection.query(queryAllRoles, function(err, res) {
       roleObjArr = res;
 
@@ -70,44 +69,37 @@ connection.connect(function(err) {
       employeeObjArr = res;
       employeeList = res.map(row => row.first_name + ' ' + row.last_name);
     }) 
-    
-const queryAllData = 
-      `SELECT 
-        e.id,
-        e.first_name,
-        e.last_name,
-        role.title,
-        department.name as department,
-        role.salary,
-        concat (m.first_name,' ', m.last_name) manager
-      FROM employee e
-      INNER JOIN employee m
-        ON m.id = e.manager_id
-      INNER JOIN role
-        ON e.role_id = role.id 
-      INNER JOIN department
-        ON role.department_id = department.id`;
-
+  
+    // Main Menu Actions
 function promptAction() {
   return inquirer.prompt({
       name: "action",
       type: "rawlist",
       message: "What would you like to do?",
       choices: [
+        // Views (Read)
         "View all employees",
-          "View all employees by Department",
-          "View all employees by Manager",
+        "View all employees by Department",
+        "View all employees by Manager",
         "View Roles",
         "View Departments",
         "View Department total salary budget",
+        // Add (Create)
         "Add Employee",
         "Add Role",
         "Add Department",
+        // Remove (Delete)
         "Remove Employee",
+        "Remove Role",
+        "Remove Department",
+        // Update 
         "Update Employee details",
+        "Update Department",
+        "Update Role"
       ]}
   )
 }
+
 
 async function getAction () {
   try {
@@ -134,7 +126,15 @@ async function getAction () {
           name: "department",
           type: "rawlist",
           message: "What department would you like to view?",
-          choices: deptList
+          choices: deptList,
+          validate: function (input) {
+            if (input === '') {
+                console.log("Please enter valid option from the list!");
+                return false;
+             } else {
+                 return true;
+             }
+         }
         })
         const selectedDept = promptDept.department
         viewEmployeesByDept(selectedDept);
@@ -145,7 +145,15 @@ async function getAction () {
           name: "manager",
           type: "rawlist",
           message: "Under which manager are the employees?",
-          choices: managerList
+          choices: managerList,
+          validate: function (input) {
+            if (input === '') {
+                console.log("Please enter valid option from the list!");
+                return false;
+             } else {
+                 return true;
+             }
+          }
         })
         let selectedMgr = promptMgr.manager
         let selectedMgrObj = await managerObjArr.find(row => row.manager === selectedMgr)
@@ -158,7 +166,15 @@ async function getAction () {
           name: "departmentBudget",
           type: "rawlist",
           message: "What department's budget would you like to view?",
-          choices: deptList
+          choices: deptList,
+          validate: function (input) {
+            if (input === '') {
+                console.log("Please enter valid option from the list!");
+                return false;
+             } else {
+                 return true;
+             }
+         }
         })
         const selectedDeptBudget = promptDeptBudget.departmentBudget
         viewBudgetByDept(selectedDeptBudget);
@@ -222,7 +238,15 @@ async function getAction () {
                   name: "dept",
                   type: "rawlist",
                   message: "What department does the new role fall under?",
-                  choices: deptList
+                  choices: deptList,
+                  validate: function (input) {
+                    if (input === '') {
+                        console.log("Please enter valid option from the list!");
+                        return false;
+                     } else {
+                         return true;
+                     }
+                 }
               }
             ]);
 
@@ -264,11 +288,13 @@ async function getAction () {
 
             let employeeFirstName = promptRemoveEmployee.firstName;
             let employeeLastName = promptRemoveEmployee.lastName;
-            console.log("Employee Obj Array = ", employeeObjArr);
             let selectedEmpObj = await employeeObjArr.find(
               row => row.first_name === employeeFirstName && row.last_name === employeeLastName
             );
-              console.log("Selected Empl Obj from await function = ",selectedEmpObj);
+            if (!selectedEmpObj) {
+              console.log('Please enter first and last name that exists in the database!');
+              getAction();
+            }
               let selectedEmpId = selectedEmpObj.id;
             removeEmployee(selectedEmpId);
             break;
@@ -276,7 +302,7 @@ async function getAction () {
             case "Update Employee details":
               const promptUpdateEmployee = await inquirer.prompt([
                 {
-                name: "selectedEmployee",
+                name: "selectedEmployee", 
                 type: "rawlist",
                 message: "Select Employee to update?",
                 choices: employeeList
@@ -327,7 +353,95 @@ async function getAction () {
 
                     updateEmployeeData(selectedEmployeeId, updatedEmployeeData);
                     break;
+                  
+                    case "Update Department":
+                      const promptUpdateDept = await inquirer.prompt([
+                        {
+                        name: "selectedDept", 
+                        type: "rawlist",
+                        message: "Select Department name to update?",
+                        choices: deptList
+                        }
+                        ]);
+              
+                        let selectedDeptName = promptUpdateDept.selectedDept;
+                        let selectedDeptNameObj = await deptObjArr.find(row => row.name === selectedDeptName)
+                        let selectedDeptNameId = selectedDeptNameObj.id;
+        
+                        const promptUpdateDeptData = await inquirer.prompt([
+                          {
+                            name: "updateDeptName",
+                            type: "input",
+                            message: "Enter updated department name?",
+                            },
+                          ]);
+                  
+                    let updatedDeptName = promptUpdateDeptData.updateDeptName;
 
+                    updateDeptData(selectedDeptNameId, updatedDeptName);
+                    break;
+
+                    case "Update Role":
+                      const promptUpdateRole = await inquirer.prompt([
+                        {
+                        name: "selectedRole", 
+                        type: "rawlist",
+                        message: "Select Role name to update?",
+                        choices: roleList
+                        }
+                        ]);
+              
+                        let selectedRoleName = promptUpdateRole.selectedRole;
+                        let selectedRoleNameObj = await roleObjArr.find(row => row.title === selectedRoleName)
+                        let selectedRoleNameId = selectedRoleNameObj.id;
+        
+                        const promptUpdateRoleData = await inquirer.prompt([
+                          {
+                            name: "updateRoleName",
+                            type: "input",
+                            message: "Enter updated Role name?",
+                            },
+                          ]);
+                  
+                    let updatedRoleName = promptUpdateRoleData.updateRoleName;
+
+                    updateRoleData(selectedRoleNameId, updatedRoleName);
+                    break;
+
+
+                    case "Remove Role":
+                      const promptRemoveRole = await inquirer.prompt([
+                        {
+                        name: "selectedRole", 
+                        type: "rawlist",
+                        message: "Select Role name to delete?",
+                        choices: roleList
+                        }
+                        ]);
+              
+                        let selectedRoleRemove = promptRemoveRole.selectedRole;
+                        let selectedRoleRemoveObj = await roleObjArr.find(row => row.title === selectedRoleRemove)
+                        let selectedRoleRemoveId = selectedRoleRemoveObj.id;
+
+                    removeRole(selectedRoleRemoveId);
+                    break;
+
+                    case "Remove Department":
+                      const promptRemoveDept = await inquirer.prompt([
+                        {
+                        name: "selectedDept", 
+                        type: "rawlist",
+                        message: "Select department name to delete?",
+                        choices: deptList
+                        }
+                        ]);
+              
+                        let selectedDeptRemove = promptRemoveDept.selectedDept;
+                        let selectedDeptRemoveObj = await deptObjArr.find(row => row.name === selectedDeptRemove)
+                        let selectedDeptRemoveId = selectedDeptRemoveObj.id;
+
+                    removeDept(selectedDeptRemoveId);
+                    break;
             
       //--- switch ---
     }
@@ -478,7 +592,7 @@ function removeEmployee(employeeId) {
   });
 }
 function updateEmployeeData(emplId, emplDetails) {
-  console.log('Update Employee id = ',emplId, 'Update Employee data = ', emplDetails);
+  console.log('Update Employee id = ',emplId, ' Update Employee data = ', emplDetails);
   connection.query(
   `UPDATE employee SET first_name = ?, last_name = ?, manager_id =?, role_id = ? WHERE id = ?`,
   [emplDetails.first_name,emplDetails.last_name,emplDetails.manager_id, emplDetails.role_id, emplId ],
@@ -488,6 +602,53 @@ function updateEmployeeData(emplId, emplDetails) {
   getAction();
   });
 }
+
+function updateDeptData(deptId, deptDetails) {
+  console.log('Update Dept id = ',deptId, ' Update Employee data = ', deptDetails);
+  connection.query(
+  `UPDATE department SET name = ? WHERE id = ?`,
+  [deptDetails, deptId ],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
+function updateRoleData(roleId, roleDetails) {
+  console.log('Update Dept id = ',roleId, ' Update Employee data = ', roleDetails);
+  connection.query(
+  `UPDATE role SET title = ? WHERE id = ?`,
+  [roleDetails, roleId ],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
+function removeRole(roleId) {
+  console.log('Role ID = ', roleId);
+  connection.query(
+  `DELETE FROM role WHERE id = (?)`, [roleId],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
+function removeDept(deptId) {
+  console.log('Role ID = ', deptId);
+  connection.query(
+  `DELETE FROM department WHERE id = (?)`, [deptId],
+  function(err, res) {
+    if (err) throw err;
+    console.table(res);
+  getAction();
+  });
+}
+
 function displayBanner() {
   const banner = `
 
